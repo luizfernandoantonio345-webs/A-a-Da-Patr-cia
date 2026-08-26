@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { brl, C } from "@/lib/format";
 import { Acai } from "@/components/AcaiVisual";
 import { GlowNav } from "@/components/GlowNav";
+import { BrandLogo, BrandLogoMini } from "@/components/BrandLogo";
 import type { Category, Product, Comanda, Order, CartLine, OptionGroup } from "@/lib/types";
 
 /* ---------- utilidades ---------- */
@@ -251,14 +252,16 @@ export default function ComandaPage() {
             borderRadius:"50%", background:"radial-gradient(circle,#7B3FB0 0%,transparent 70%)", opacity:.45, pointerEvents:"none" }} />
           <div style={{ position:"relative", padding: scrolled ? "12px 20px" : "20px 20px 16px", transition:"padding .3s" }}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-              <div style={{ fontSize:10.5, fontWeight:700, letterSpacing:2, color:"#C9AEE4" }}>AÇAÍ DA PATRÍCIA</div>
-              <div style={{ fontSize:10.5, fontWeight:600, padding:"4px 8px", borderRadius:999, background:"rgba(255,255,255,.1)", color:"#E6D6F5" }}>Ibirité · MG</div>
+              {scrolled ? <BrandLogoMini /> : (
+                <div style={{ fontSize:10.5, fontWeight:700, letterSpacing:2, color:"#C9AEE4" }}>AÇAÍ DA PATRÍCIA</div>
+              )}
+              {!scrolled && <div style={{ fontSize:10.5, fontWeight:600, padding:"4px 8px", borderRadius:999, background:"rgba(255,255,255,.1)", color:"#E6D6F5" }}>Ibirité · MG</div>}
             </div>
             {!scrolled && (
               <>
-                <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", marginTop:12 }}>
-                  <div className="disp" style={{ color:"#fff", fontWeight:800, fontSize:30, lineHeight:1.02, letterSpacing:"-.02em" }}>Monte seu<br />açaí perfeito</div>
-                  <div className="pop"><Acai toppings={["#E24C86","#F4D35E","#B98B4E","#7FB53E"]} fill={.72} w={72} /></div>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginTop:14, gap:8 }}>
+                  <BrandLogo />
+                  <div className="pop" style={{ flex:"none" }}><Acai toppings={["#E24C86","#F4D35E","#B98B4E","#7FB53E"]} fill={.72} w={74} /></div>
                 </div>
                 <div style={{ marginTop:12, display:"flex", borderRadius:16, overflow:"hidden", background:C.sand }}>
                   <div style={{ display:"grid", placeItems:"center", padding:"0 14px", background:C.lime }}><ScanLine size={19} color={C.acaiDeep} /></div>
