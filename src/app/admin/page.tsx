@@ -3,6 +3,7 @@ import { StaffGate } from "@/components/StaffGate";
 import { useEffect, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Plus, Trash2, Pencil, X, FolderPlus } from "lucide-react";
+import { GlowNav } from "@/components/GlowNav";
 import { supabase } from "@/lib/supabase";
 import { brl, C } from "@/lib/format";
 import type { Category, Product, Comanda } from "@/lib/types";
@@ -79,10 +80,12 @@ function AdminInner() {
         <div className="disp" style={{ color: "#fff", fontWeight: 800, fontSize: 18, flex: 1 }}>Admin · Açaí da Patrícia</div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, padding: "14px 20px" }}>
-        {(["cardapio", "comandas"] as const).map((t) => { const on = tab === t; return (
-          <button key={t} onClick={() => setTab(t)} className="press" style={{ fontSize: 13, fontWeight: 700, padding: "8px 16px", borderRadius: 999, border: `1.5px solid ${on ? C.acai : C.line}`,
-            background: on ? C.acai : "#fff", color: on ? "#fff" : C.muted }}>{t === "cardapio" ? "Cardápio" : "Comandas & QR"}</button>); })}
+      <div style={{ padding: "14px 20px" }}>
+        <GlowNav
+          tabs={["Cardápio", "Comandas & QR"]}
+          active={tab === "cardapio" ? 0 : 1}
+          onChange={(i) => setTab(i === 0 ? "cardapio" : "comandas")}
+        />
       </div>
 
       <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 20px 48px" }}>

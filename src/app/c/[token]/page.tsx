@@ -5,6 +5,7 @@ import { Plus, Minus, Check, ArrowLeft, ArrowRight, Trash2, ScanLine, ShoppingBa
 import { supabase } from "@/lib/supabase";
 import { brl, C } from "@/lib/format";
 import { Acai } from "@/components/AcaiVisual";
+import { GlowNav } from "@/components/GlowNav";
 import type { Category, Product, Comanda, Order, CartLine, OptionGroup } from "@/lib/types";
 
 export default function ComandaPage() {
@@ -22,6 +23,7 @@ export default function ComandaPage() {
   const [buildProduct, setBuildProduct] = useState<Product | null>(null);
   const [toast, setToast] = useState(false);
   const [sending, setSending] = useState(false);
+  const [dir, setDir] = useState<"R" | "L">("R");
 
   // carrega comanda + cardápio
   useEffect(() => {
@@ -69,6 +71,7 @@ export default function ComandaPage() {
   const rm = (uid: string) => setCart((c) => c.filter((l) => l.uid !== uid));
   const qty = (uid: string, d: number) => setCart((c) => c.map((l) => l.uid === uid ? { ...l, qty: Math.max(1, l.qty + d) } : l));
 
+  const activeIdx = Math.max(0, cats.findIndex((c) => c.id === catId));
   const count = cart.reduce((s, l) => s + l.qty, 0);
   const cartTotal = cart.reduce((s, l) => s + l.unit_price * l.qty, 0);
   const contaItems = orders.flatMap((o) => o.order_items);
@@ -139,16 +142,16 @@ export default function ComandaPage() {
         </div>
 
         {/* categorias */}
-        <div className="noscroll" style={{ display: "flex", gap: 8, padding: "12px 16px", overflowX: "auto", background: C.cream }}>
-          {cats.map((m) => { const on = m.id === catId; return (
-            <button key={m.id} onClick={() => setCatId(m.id)} className="press"
-              style={{ whiteSpace: "nowrap", fontSize: 13, fontWeight: 700, padding: "8px 16px", borderRadius: 999, flex: "none",
-                background: on ? C.acai : "#fff", color: on ? "#fff" : C.muted, border: `1.5px solid ${on ? C.acai : C.line}` }}>
-              {m.name}</button>); })}
+        <div style={{ padding: "12px 16px", background: C.cream }}>
+          <GlowNav
+            tabs={cats.map((c) => c.name)}
+            active={activeIdx}
+            onChange={(i) => { setDir(i >= activeIdx ? "R" : "L"); setCatId(cats[i].id); }}
+          />
         </div>
 
         {/* itens */}
-        <div className="noscroll" style={{ flex: 1, overflowY: "auto", padding: "4px 16px 96px", background: C.cream }}>
+        <div key={catId} className={`noscroll ${dir === "R" ? "navInR" : "navInL"}`} style={{ flex: 1, overflowY: "auto", padding: "4px 16px 96px", background: C.cream }}>
           {items.map((it, idx) => (
             <div key={it.id} className="fu" style={{ display: "flex", gap: 16, padding: 14, marginBottom: 12, alignItems: "center",
               borderRadius: 24, background: "#fff", border: `1px solid ${C.line}`, boxShadow: "0 16px 34px -24px rgba(42,14,63,.6)",
