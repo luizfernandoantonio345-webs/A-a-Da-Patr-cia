@@ -81,6 +81,14 @@ export default function ComandaPage() {
   async function sendOrder() {
     if (!cart.length || !comanda || comanda.status === "fechada" || sending) return;
     setSending(true);
+
+    // abre a comanda PRIMEIRO — assim quando o pedido chegar no balcão
+    // via realtime, a comanda já está "aberta" e ele não é filtrado
+    if (comanda.status === "livre") {
+      await supabase.from("comandas").update({ status: "aberta", opened_at: new Date().toISOString() }).eq("id", comanda.id);
+      setComanda({ ...comanda, status: "aberta" });
+    }
+
     const total = cart.reduce((s, l) => s + l.unit_price * l.qty, 0);
     const { data: order, error } = await supabase.from("orders")
       .insert({ comanda_id: comanda.id, total, status: "novo" }).select().single();
@@ -92,9 +100,6 @@ export default function ComandaPage() {
       if (it && l.options.length) {
         await supabase.from("order_item_options").insert(l.options.map((o) => ({ order_item_id: it.id, name: o.name, price: o.price })));
       }
-    }
-    if (comanda.status === "livre") {
-      await supabase.from("comandas").update({ status: "aberta", opened_at: new Date().toISOString() }).eq("id", comanda.id);
     }
     setCart([]); setScreen("menu"); setToast(true); setTimeout(() => setToast(false), 2200);
     loadConta(comanda.id);

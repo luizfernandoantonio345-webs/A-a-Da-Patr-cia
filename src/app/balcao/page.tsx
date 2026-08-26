@@ -28,6 +28,7 @@ function BalcaoInner() {
     load();
     const ch = supabase.channel("balcao")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, load)
+      .on("postgres_changes", { event: "*", schema: "public", table: "order_items" }, load)
       .on("postgres_changes", { event: "*", schema: "public", table: "comandas" }, load)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
