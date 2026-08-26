@@ -10,15 +10,73 @@ body { font-family: 'DM Sans', system-ui, sans-serif; }
 .noscroll::-webkit-scrollbar { display: none; }
 .press { transition: transform .12s ease; }
 .press:active { transform: scale(.96); }
+
+/* entrada de cards */
 @keyframes fu { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .fu { animation: fu .5s cubic-bezier(.2,.7,.2,1) both; }
+
+/* bottom sheet */
 @keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
 .sheet { animation: sheet .38s cubic-bezier(.2,.8,.2,1) both; }
+
+/* passo do montador */
 @keyframes stepin { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
 .stepin { animation: stepin .32s cubic-bezier(.2,.8,.2,1) both; }
+
+/* pop genérico */
 @keyframes pop { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
 .pop { animation: pop .3s ease both; }
+
+/* navegação direcional */
 @keyframes navInR { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
 @keyframes navInL { from { opacity: 0; transform: translateX(-26px); } to { opacity: 1; transform: none; } }
 .navInR { animation: navInR .34s cubic-bezier(.2,.8,.2,1) both; }
 .navInL { animation: navInL .34s cubic-bezier(.2,.8,.2,1) both; }
+
+/* skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #EDE5F2 25%, #F8F4FC 50%, #EDE5F2 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+/* badge do carrinho pulsa ao adicionar item */
+@keyframes badgePop { 0%,100% { transform: scale(1); } 40% { transform: scale(1.45); } 70% { transform: scale(.9); } }
+.badgePop { animation: badgePop .38s cubic-bezier(.2,.8,.2,1); }
+
+/* toast de status (sobe de baixo) */
+@keyframes toastUp { from { opacity: 0; transform: translateX(-50%) translateY(24px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.toastUp { animation: toastUp .35s cubic-bezier(.2,.8,.2,1) both; }
+
+/* tela de boas-vindas */
+@keyframes wFade  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wSlide { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+.wFade  { animation: wFade  .5s ease both; }
+.wSlide { animation: wSlide .55s cubic-bezier(.2,.8,.2,1) both; }
+
+/* confetti */
+.confettiPiece {
+  position: fixed;
+  width: 9px; height: 9px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: confettiFall var(--dur,1.2s) var(--delay,0s) ease-in forwards;
+}
+@keyframes confettiFall {
+  0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--dx,0px), var(--dy,600px)) rotate(var(--rot,360deg)); opacity: 0; }
+}
+
+/* pulsing dot para status "novo" */
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+.pulseDot { animation: pulse 1.2s ease-in-out infinite; }
+
+/* timeline de status */
+@keyframes lineGrow { from { height: 0; } to { height: 100%; } }
+.lineGrow { animation: lineGrow .5s ease both; }
