@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+* { -webkit-tap-highlight-color: transparent; }
+body { font-family: 'DM Sans', system-ui, sans-serif; }
+.disp { font-family: 'Bricolage Grotesque', sans-serif; }
+.noscroll::-webkit-scrollbar { display: none; }
+.press { transition: transform .12s ease; }
+.press:active { transform: scale(.96); }
+@keyframes fu { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.fu { animation: fu .5s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes sheet { from { transform: translateY(100%); } to { transform: none; } }
+.sheet { animation: sheet .38s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes stepin { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+.stepin { animation: stepin .32s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes pop { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.06); } 100% { transform: scale(1); opacity: 1; } }
+.pop { animation: pop .3s ease both; }
