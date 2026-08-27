@@ -15,8 +15,7 @@ export function StaffGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setReady(true);
+      setSession(data.session); setReady(true);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
@@ -29,15 +28,18 @@ export function StaffGate({ children }: { children: React.ReactNode }) {
     setBusy(false);
   };
 
-  /* ─── loading ─────────────────────────────────────────────── */
+  /* ─── loading ─── */
   if (!ready) return (
-    <div style={bg}>
+    <div style={root}>
       <style>{css}</style>
-      <div style={spinner} />
+      <BgPhoto />
+      <div style={{ position:"relative", zIndex:1 }}>
+        <div style={spinner} />
+      </div>
     </div>
   );
 
-  /* ─── autenticado ─────────────────────────────────────────── */
+  /* ─── autenticado ─── */
   if (session) return (
     <>
       {children}
@@ -45,117 +47,132 @@ export function StaffGate({ children }: { children: React.ReactNode }) {
     </>
   );
 
-  /* ─── login ───────────────────────────────────────────────── */
+  /* ─── login ─── */
   return (
-    <div style={bg}>
+    <div style={root}>
       <style>{css}</style>
 
-      {/* mini-header */}
-      <div style={headerRow}>
-        <div style={avatar}>A</div>
-        <span style={appName}>Açaí da Patrícia</span>
-      </div>
+      {/* foto de fundo com filtro separado (não afeta o card) */}
+      <BgPhoto />
 
-      {/* card */}
-      <div style={card}>
-        {/* topo */}
-        <p style={label}>PAINEL DA LOJA</p>
-        <h1 style={title}>Bem-vinda de volta<br/>💜</h1>
-        <p style={sub}>Acesse para gerenciar pedidos e cardápio.</p>
+      {/* conteúdo */}
+      <div style={content}>
 
-        {/* e-mail */}
-        <div style={fieldWrap}>
-          <label style={fieldLabel}>E-MAIL</label>
-          <input
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            type="email"
-            autoComplete="email"
-            placeholder="seu@email.com"
-            style={input}
-            onFocus={e => (e.target.style.borderColor = "#A6D45A")}
-            onBlur={e  => (e.target.style.borderColor = "rgba(255,255,255,.14)")}
-          />
+        {/* mini-header */}
+        <div style={headerRow}>
+          <div style={avatar}>A</div>
+          <span style={appName}>Açaí da Patrícia</span>
         </div>
 
-        {/* senha */}
-        <div style={fieldWrap}>
-          <label style={fieldLabel}>SENHA</label>
-          <div style={{ position:"relative" }}>
+        {/* card */}
+        <div style={card}>
+          <p style={labelTop}>PAINEL DA LOJA</p>
+          <h1 style={title}>
+            Bem-vinda de volta<br />
+            <span style={{ fontSize:26 }}>💜</span>
+          </h1>
+          <p style={subtitle}>Acesse para gerenciar pedidos e cardápio.</p>
+
+          {/* e-mail */}
+          <div style={fieldWrap}>
+            <label style={fieldLabel}>E-MAIL</label>
             <input
-              value={pass}
-              onChange={e => setPass(e.target.value)}
-              type={show ? "text" : "password"}
-              autoComplete="current-password"
-              placeholder="••••••••"
-              onKeyDown={e => e.key === "Enter" && login()}
-              style={{ ...input, paddingRight:70 }}
+              value={email} onChange={e => setEmail(e.target.value)}
+              type="email" autoComplete="email" placeholder="seu@email.com"
+              style={inp}
               onFocus={e => (e.target.style.borderColor = "#A6D45A")}
               onBlur={e  => (e.target.style.borderColor = "rgba(255,255,255,.14)")}
             />
-            <button onClick={() => setShow(s => !s)} style={showBtn}>
-              {show ? "ocultar" : "mostrar"}
-            </button>
           </div>
+
+          {/* senha */}
+          <div style={fieldWrap}>
+            <label style={fieldLabel}>SENHA</label>
+            <div style={{ position:"relative" }}>
+              <input
+                value={pass} onChange={e => setPass(e.target.value)}
+                type={show ? "text" : "password"}
+                autoComplete="current-password" placeholder="••••••••"
+                onKeyDown={e => e.key === "Enter" && login()}
+                style={{ ...inp, paddingRight:70 }}
+                onFocus={e => (e.target.style.borderColor = "#A6D45A")}
+                onBlur={e  => (e.target.style.borderColor = "rgba(255,255,255,.14)")}
+              />
+              <button onClick={() => setShow(s => !s)} style={showBtn}>
+                {show ? "ocultar" : "mostrar"}
+              </button>
+            </div>
+          </div>
+
+          {/* manter + esqueci */}
+          <div style={checkRow}>
+            <label style={checkLabel}>
+              <input type="checkbox" checked={keep} onChange={e => setKeep(e.target.checked)}
+                style={{ accentColor:"#7B3FB0", width:15, height:15, cursor:"pointer" }} />
+              <span style={{ color:"#C4B2D8", fontSize:12.5, marginLeft:7 }}>Manter conectada</span>
+            </label>
+            <span style={forgotLink}>Esqueci a senha</span>
+          </div>
+
+          {err && <div style={errBox}>{err}</div>}
+
+          <button onClick={login} disabled={busy} style={{
+            ...loginBtn,
+            background: busy
+              ? "rgba(91,42,136,.4)"
+              : "linear-gradient(120deg,#5B2A88,#7B3FB0 60%,#9B57D0)",
+            boxShadow: busy ? "none" : "0 8px 28px -8px rgba(91,42,136,.65)",
+            cursor: busy ? "not-allowed" : "pointer",
+          }}>
+            {busy ? "Entrando…" : "Entrar"}
+          </button>
+
+          <p style={footer}>
+            Acesso exclusivo da equipe · Açaí da Patrícia · Ibiritê–MG
+          </p>
         </div>
-
-        {/* manter + esqueci */}
-        <div style={checkRow}>
-          <label style={checkLabel}>
-            <input type="checkbox" checked={keep} onChange={e => setKeep(e.target.checked)}
-              style={{ accentColor:"#7B3FB0", width:15, height:15, cursor:"pointer" }} />
-            <span style={{ color:"#C4B2D8", fontSize:12.5, marginLeft:6 }}>Manter conectada</span>
-          </label>
-          <span style={forgotLink}>Esqueci a senha</span>
-        </div>
-
-        {err && (
-          <div style={errBox}>{err}</div>
-        )}
-
-        {/* botão */}
-        <button onClick={login} disabled={busy} style={{
-          ...loginBtn,
-          background: busy ? "rgba(91,42,136,.4)" : "linear-gradient(120deg,#5B2A88,#7B3FB0 60%,#9B57D0)",
-          boxShadow:  busy ? "none" : "0 8px 28px -8px rgba(91,42,136,.65)",
-          cursor: busy ? "not-allowed" : "pointer",
-        }}>
-          {busy ? "Entrando…" : "Entrar"}
-        </button>
-
-        {/* rodapé */}
-        <p style={footer}>
-          Acesso exclusivo da equipe · Açaí da Patrícia · Ibiritê–MG
-        </p>
       </div>
     </div>
   );
 }
 
-/* ─── estilos ─────────────────────────────────────────────────── */
-const bg: React.CSSProperties = {
-  minHeight:"100vh",
+/* ─── componente de fundo ─────────────────────────────────── */
+function BgPhoto() {
+  return (
+    <div style={{
+      position:"absolute", inset:0, zIndex:0,
+      backgroundImage:"url(/images/patricia-bg.jpg)",
+      backgroundSize:"cover", backgroundPosition:"center top",
+      backgroundColor:"#1A0930",       /* fallback sem foto */
+      filter:"brightness(.5) saturate(1.3)",
+    }} />
+  );
+}
+
+/* ─── estilos ─────────────────────────────────────────────── */
+const root: React.CSSProperties = {
+  position:"relative", minHeight:"100vh",
+  overflow:"hidden", background:"#0C0512",
+  display:"grid", placeItems:"center",
+};
+
+const content: React.CSSProperties = {
+  position:"relative", zIndex:1,
   display:"flex", flexDirection:"column",
-  alignItems:"center", justifyContent:"center",
-  padding:"24px 16px",
-  backgroundImage:"url(/images/patricia-bg.jpg)",
-  backgroundSize:"cover", backgroundPosition:"center top",
-  backgroundColor:"#1A0930",
-  position:"relative",
+  alignItems:"center", padding:"24px 16px", width:"100%",
 };
 
 const card: React.CSSProperties = {
-  position:"relative", width:"100%", maxWidth:360,
-  background:"rgba(18,6,34,.72)",
+  width:"100%", maxWidth:360,
+  background:"rgba(18,6,34,.82)",
   border:"1px solid rgba(255,255,255,.10)",
-  backdropFilter:"blur(20px)", WebkitBackdropFilter:"blur(20px)",
+  backdropFilter:"blur(18px)", WebkitBackdropFilter:"blur(18px)",
   borderRadius:24, padding:"28px 24px 20px",
   boxShadow:"0 24px 60px -16px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.07)",
 };
 
 const headerRow: React.CSSProperties = {
-  display:"flex", alignItems:"center", gap:8,
-  marginBottom:18, position:"relative",
+  display:"flex", alignItems:"center", gap:8, marginBottom:18,
 };
 
 const avatar: React.CSSProperties = {
@@ -171,18 +188,18 @@ const appName: React.CSSProperties = {
   fontWeight:700, fontSize:15, color:"#fff",
 };
 
-const label: React.CSSProperties = {
+const labelTop: React.CSSProperties = {
   fontSize:10, fontWeight:700, letterSpacing:".12em",
-  textTransform:"uppercase", color:"#9B6EC8", marginBottom:8,
+  textTransform:"uppercase", color:"#9B6EC8", marginBottom:6,
 };
 
 const title: React.CSSProperties = {
   fontFamily:"'Bricolage Grotesque',sans-serif",
   fontSize:26, fontWeight:800, color:"#fff",
-  lineHeight:1.2, marginBottom:8,
+  lineHeight:1.25, marginBottom:8,
 };
 
-const sub: React.CSSProperties = {
+const subtitle: React.CSSProperties = {
   fontSize:13, color:"#9B8AAE", lineHeight:1.5, marginBottom:22,
 };
 
@@ -194,9 +211,9 @@ const fieldLabel: React.CSSProperties = {
   color:"#7E6698", marginBottom:6,
 };
 
-const input: React.CSSProperties = {
+const inp: React.CSSProperties = {
   width:"100%", padding:"13px 16px", borderRadius:13,
-  background:"rgba(255,255,255,.06)",
+  background:"rgba(255,255,255,.07)",
   border:"1px solid rgba(255,255,255,.14)",
   color:"#fff", fontSize:14, outline:"none",
   boxSizing:"border-box", transition:"border-color .2s",
@@ -258,6 +275,6 @@ const css = `
   @keyframes spin { to { transform: rotate(360deg) } }
   * { margin:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent }
   body { font-family:'DM Sans',system-ui,sans-serif }
-  input::placeholder { color:rgba(255,255,255,.22) }
+  input::placeholder { color:rgba(255,255,255,.25) }
   input { caret-color:#A6D45A }
 `;
