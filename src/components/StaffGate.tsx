@@ -169,17 +169,17 @@ const root: React.CSSProperties = {
   display:"grid", placeItems:"center",
 };
 
-/* fundo com scale 1.12 para parallax não mostrar bordas */
+/* fundo — contain para não cortar a foto quadrada em desktop 16:9 */
 const bgStyle: React.CSSProperties = {
   position:"absolute",
-  /* -6% em cada lado para esconder bordas ao mover */
-  inset:"-6%",
+  inset:"-8%",           /* margem para o parallax não mostrar borda */
   zIndex:0,
   backgroundImage:"url(/images/patricia-bg.jpg)",
-  backgroundSize:"cover",
-  backgroundPosition:"center 30%",   /* foco no rosto/busto */
-  backgroundColor:"#1A0930",
-  filter:"brightness(.48) saturate(1.4)",
+  backgroundSize:"contain",
+  backgroundRepeat:"no-repeat",
+  backgroundPosition:"center center",
+  backgroundColor:"#0D0518",   /* cor que preenche as laterais */
+  filter:"brightness(.52) saturate(1.35)",
   willChange:"transform",
 };
 
