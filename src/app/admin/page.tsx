@@ -312,29 +312,32 @@ function AdminInner() {
 
 function MetCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) {
   return (
-    <div className="fu" style={{ borderRadius: 18, padding: "14px 16px", background: "#fff", border: `1px solid ${C.line}`,
-      boxShadow: "0 4px 20px -10px rgba(42,14,63,.15)" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <div style={{ display: "grid", placeItems: "center", width: 32, height: 32, borderRadius: 10,
-          background: `${accent}18` }}>
+    <div className="fu cardLift" style={{ borderRadius: 18, padding: "16px 18px", background: "#fff",
+      border: `1px solid ${C.line}`, boxShadow: `0 4px 20px -10px rgba(42,14,63,.12)` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <div style={{ display: "grid", placeItems: "center", width: 36, height: 36, borderRadius: 11,
+          background: `${accent}15`, border: `1px solid ${accent}25` }}>
           {icon}
         </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: ".04em",
+          textTransform: "uppercase" }}>{label}</span>
       </div>
-      <div className="disp" style={{ fontSize: 20, fontWeight: 800, color: C.acaiDeep, lineHeight: 1 }}>{value}</div>
+      <div className="disp" style={{ fontSize: 22, fontWeight: 800, color: C.acaiDeep, lineHeight: 1 }}>{value}</div>
     </div>
   );
 }
 
 function QueuePill({ count, label, color, bg, pulse }: { count: number; label: string; color: string; bg: string; pulse?: boolean }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 12, background: bg }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 14,
+      background: bg, border: `1px solid ${color}30`, flex: 1, justifyContent: "center" }}>
       {pulse && count > 0 && (
-        <span className="pulseDot" style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
+        <span className="pulseDot" style={{ width: 9, height: 9, borderRadius: "50%",
+          background: color, display: "inline-block", flexShrink: 0 }} />
       )}
-      <div>
-        <div className="disp" style={{ fontSize: 22, fontWeight: 800, color, lineHeight: 1 }}>{count}</div>
-        <div style={{ fontSize: 10, fontWeight: 700, color, opacity: .7, marginTop: 2 }}>{label}</div>
+      <div style={{ textAlign: "center" }}>
+        <div className="disp" style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>{count}</div>
+        <div style={{ fontSize: 10, fontWeight: 700, color, opacity: .75, marginTop: 3, letterSpacing: ".05em" }}>{label.toUpperCase()}</div>
       </div>
     </div>
   );
