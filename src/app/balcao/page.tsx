@@ -15,8 +15,12 @@ function BalcaoInner() {
     const { data } = await supabase
       .from("orders")
       .select("*, order_items(*, order_item_options(*)), comanda:comandas(number,status)")
+      .not("status", "eq", "entregue")
       .order("created_at");
-    const open = ((data || []) as unknown as Order[]).filter((o) => o.comanda?.status === "aberta");
+    // mostra pedidos de qualquer comanda que não esteja fechada
+    const open = ((data || []) as unknown as Order[]).filter(
+      (o) => o.comanda?.status !== "fechada"
+    );
     const novos = open.filter((o) => o.status === "novo").length;
     if (novos > prevNovos.current) beep();
     prevNovos.current = novos;
