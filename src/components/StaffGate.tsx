@@ -34,7 +34,7 @@ export function StaffGate({ children }: { children: React.ReactNode }) {
       currentRef.current.y += (targetRef.current.y - currentRef.current.y) * ease;
       if (bgRef.current) {
         bgRef.current.style.transform =
-          `translate(${currentRef.current.x}px, ${currentRef.current.y}px) scale(1.14)`;
+          `translate(${currentRef.current.x}px, ${currentRef.current.y}px) scale(1.4)`;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
@@ -181,24 +181,24 @@ const root: React.CSSProperties = {
   display:"grid", placeItems:"center",
 };
 
-/* cover + foco no lado esquerdo onde está Patricia */
+/* cover + zoom + blur — foco em Patricia, texto promocional fora do quadro */
 const bgStyle: React.CSSProperties = {
   position:"absolute",
-  inset:"-8%",
+  inset:"-20%",
   zIndex:0,
   backgroundImage:"url(/images/patricia-bg.jpg)",
   backgroundSize:"cover",
-  backgroundPosition:"28% center",
-  filter:"brightness(.62) saturate(1.25)",
+  backgroundPosition:"18% center",
+  filter:"brightness(.55) saturate(1.2) blur(14px)",
   willChange:"transform",
 };
 
-/* escurece bordas e lado direito (onde fica o texto promocional do banner) */
+/* overlay escurece para o card se destacar sobre o fundo desfocado */
 const overlay: React.CSSProperties = {
   position:"absolute", inset:0, zIndex:1, pointerEvents:"none",
   background:[
-    "linear-gradient(to right, rgba(5,1,14,.72) 0%, rgba(5,1,14,.08) 28%, rgba(5,1,14,.35) 60%, rgba(5,1,14,.90) 100%)",
-    "linear-gradient(to bottom, rgba(5,1,14,.55) 0%, transparent 25%, transparent 75%, rgba(5,1,14,.7) 100%)",
+    "linear-gradient(to right, rgba(4,0,12,.78) 0%, rgba(4,0,12,.18) 30%, rgba(4,0,12,.50) 65%, rgba(4,0,12,.92) 100%)",
+    "linear-gradient(to bottom, rgba(4,0,12,.60) 0%, transparent 22%, transparent 78%, rgba(4,0,12,.75) 100%)",
   ].join(","),
 };
 
