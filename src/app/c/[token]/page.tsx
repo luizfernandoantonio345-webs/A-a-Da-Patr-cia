@@ -168,14 +168,26 @@ export default function ComandaPage() {
     setSending(true);
 
     if (comanda.status === "livre") {
-      await supabase.from("comandas").update({ status: "aberta", opened_at: new Date().toISOString() }).eq("id", comanda.id);
+      const { error: cmdErr } = await supabase
+        .from("comandas")
+        .update({ status: "aberta", opened_at: new Date().toISOString() })
+        .eq("id", comanda.id);
+      if (cmdErr) {
+        alert("Erro ao abrir comanda: " + cmdErr.message);
+        setSending(false);
+        return;
+      }
       setComanda({ ...comanda, status: "aberta" });
     }
 
     const total = cart.reduce((s, l) => s + l.unit_price * l.qty, 0);
     const { data: order, error } = await supabase.from("orders")
       .insert({ comanda_id: comanda.id, total, status: "novo" }).select().single();
-    if (error || !order) { alert("Não foi possível enviar. Tente de novo."); setSending(false); return; }
+    if (error || !order) {
+      alert("Erro ao enviar pedido: " + (error?.message ?? "tente novamente"));
+      setSending(false);
+      return;
+    }
     for (const l of cart) {
       const { data: it } = await supabase.from("order_items")
         .insert({ order_id: order.id, product_id: l.product_id, name: l.name, unit_price: l.unit_price, qty: l.qty })
