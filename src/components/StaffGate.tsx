@@ -34,7 +34,7 @@ export function StaffGate({ children }: { children: React.ReactNode }) {
       currentRef.current.y += (targetRef.current.y - currentRef.current.y) * ease;
       if (bgRef.current) {
         bgRef.current.style.transform =
-          `translate(${currentRef.current.x}px, ${currentRef.current.y}px) scale(1.4)`;
+          `translate(${currentRef.current.x}px, ${currentRef.current.y}px) scale(1.12)`;
       }
       rafRef.current = requestAnimationFrame(loop);
     };
@@ -181,31 +181,28 @@ const root: React.CSSProperties = {
   display:"grid", placeItems:"center",
 };
 
-/* cover + zoom + blur — foco em Patricia, texto promocional fora do quadro */
+/* fundo: blur forte torna o texto do banner ilegível, deixa atmosfera roxa */
 const bgStyle: React.CSSProperties = {
   position:"absolute",
-  inset:"-20%",
+  inset:"-6%",
   zIndex:0,
   backgroundImage:"url(/images/patricia-bg.jpg)",
   backgroundSize:"cover",
-  backgroundPosition:"18% center",
-  filter:"brightness(.55) saturate(1.2) blur(14px)",
+  backgroundPosition:"center center",
+  filter:"brightness(.72) saturate(1.3) blur(20px)",
   willChange:"transform",
 };
 
-/* overlay escurece para o card se destacar sobre o fundo desfocado */
+/* overlay uniforme suave — SEM gradiente nas bordas que cria barra preta */
 const overlay: React.CSSProperties = {
   position:"absolute", inset:0, zIndex:1, pointerEvents:"none",
-  background:[
-    "linear-gradient(to right, rgba(4,0,12,.78) 0%, rgba(4,0,12,.18) 30%, rgba(4,0,12,.50) 65%, rgba(4,0,12,.92) 100%)",
-    "linear-gradient(to bottom, rgba(4,0,12,.60) 0%, transparent 22%, transparent 78%, rgba(4,0,12,.75) 100%)",
-  ].join(","),
+  background:"rgba(6,1,18,.38)",
 };
 
-/* vinheta radial para profundidade */
+/* vinheta suave só para profundidade */
 const vignette: React.CSSProperties = {
   position:"absolute", inset:0, zIndex:1, pointerEvents:"none",
-  background:"radial-gradient(ellipse 72% 82% at 50% 50%, transparent 35%, rgba(0,0,0,.52) 100%)",
+  background:"radial-gradient(ellipse 85% 85% at 50% 50%, transparent 30%, rgba(4,0,14,.50) 100%)",
 };
 
 const content: React.CSSProperties = {
