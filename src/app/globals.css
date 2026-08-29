@@ -134,3 +134,12 @@ button, a { touch-action: manipulation; }
   .prod-row .prod-price { order:2; }
   .prod-row .prod-actions { order:3; margin-left:auto; }
 }
+
+/* Dashboard premium: KPI grid → 2 colunas em tablet, 1 em mobile */
+@media (max-width:900px) {
+  .kpi-grid { grid-template-columns:1fr 1fr !important; }
+  .dash-grid { grid-template-columns:1fr !important; }
+}
+@media (max-width:480px) {
+  .kpi-grid { grid-template-columns:1fr 1fr !important; gap:10px !important; }
+}

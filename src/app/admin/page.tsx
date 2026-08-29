@@ -3,7 +3,7 @@ import { StaffGate } from "@/components/StaffGate";
 import { GlowNav } from "@/components/GlowNav";
 import { useEffect, useState } from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { Plus, Trash2, Pencil, X, FolderPlus, TrendingUp, ShoppingBag, Wallet, Users } from "lucide-react";
+import { Plus, Trash2, Pencil, X, FolderPlus } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { brl, C } from "@/lib/format";
 import type { Category, Product, Comanda } from "@/lib/types";
@@ -14,6 +14,7 @@ type Metrics = {
   todayRevenue: number;
   todayOrders: number;
   weekRevenue: number;
+  weekSeries: { label: string; value: number }[];
   activeComandas: number;
   queueNovos: number;
   queuePreparando: number;
@@ -23,6 +24,7 @@ type Metrics = {
 
 const EMPTY_METRICS: Metrics = {
   todayRevenue: 0, todayOrders: 0, weekRevenue: 0,
+  weekSeries: [],
   activeComandas: 0, queueNovos: 0, queuePreparando: 0, queueProntos: 0,
   topProducts: [],
 };
@@ -52,7 +54,7 @@ function AdminInner() {
 
     const [{ data: todayOrd }, { data: weekOrd }, { data: liveOrd }, { data: activeCmd }] = await Promise.all([
       supabase.from("orders").select("total, status, order_items(name, qty, unit_price)").gte("created_at", todayStart.toISOString()),
-      supabase.from("orders").select("total").gte("created_at", weekStart.toISOString()),
+      supabase.from("orders").select("total, created_at").gte("created_at", weekStart.toISOString()),
       supabase.from("orders").select("status, comanda:comandas(status)"),
       supabase.from("comandas").select("id").eq("status", "aberta"),
     ]);
@@ -61,7 +63,18 @@ function AdminInner() {
     const today = (todayOrd || []) as unknown as TodayOrder[];
     const todayRevenue = today.reduce((s, o) => s + Number(o.total), 0);
     const todayOrders  = today.length;
-    const weekRevenue  = (weekOrd || []).reduce((s: number, o: { total: number }) => s + Number(o.total), 0);
+    type WeekOrder = { total: number; created_at: string };
+    const weekAll = (weekOrd || []) as unknown as WeekOrder[];
+    const weekRevenue = weekAll.reduce((s, o) => s + Number(o.total), 0);
+    // série diária dos últimos 7 dias
+    const dayLabels = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+    const weekSeries = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(); d.setDate(d.getDate() - (6 - i)); d.setHours(0, 0, 0, 0);
+      const next = new Date(d); next.setDate(next.getDate() + 1);
+      const val = weekAll.filter(o => { const t = new Date(o.created_at); return t >= d && t < next; })
+                         .reduce((s, o) => s + Number(o.total), 0);
+      return { label: dayLabels[d.getDay()], value: val };
+    });
 
     type LiveOrder = { status: string; comanda?: { status: string } };
     const live = ((liveOrd || []) as unknown as LiveOrder[]).filter((o) => o.comanda?.status === "aberta");
@@ -79,7 +92,7 @@ function AdminInner() {
 
     setMetrics({
       todayRevenue, todayOrders,
-      weekRevenue,
+      weekRevenue, weekSeries,
       activeComandas: (activeCmd || []).length,
       queueNovos:      live.filter((o) => o.status === "novo").length,
       queuePreparando: live.filter((o) => o.status === "preparando").length,
@@ -164,63 +177,119 @@ function AdminInner() {
         />
       </div>
 
-      <div className="admin-inner" style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 60px" }}>
+      <div className="admin-inner" style={{ maxWidth: 1240, margin: "0 auto", padding: "24px 20px 60px" }}>
 
         {/* ======================== DASHBOARD ======================== */}
         {tab === "dashboard" && (
           <>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 18, textTransform: "capitalize" }}>{todayDate}</div>
 
-            {/* Métricas principais */}
-            <div className="g3">
-              <MetCard icon={<Wallet size={18} color={C.lime} />} label="Receita hoje" value={brl(metrics.todayRevenue)} accent={C.lime} />
-              <MetCard icon={<ShoppingBag size={18} color="#C09FD8" />} label="Pedidos hoje" value={String(metrics.todayOrders)} accent="#C09FD8" />
-              <MetCard icon={<TrendingUp size={18} color="#E8B130" />} label="Ticket médio" value={brl(avgTicket)} accent="#E8B130" />
-            </div>
-            <div className="g2">
-              <MetCard icon={<Users size={18} color={C.berry} />} label="Comandas ativas agora" value={String(metrics.activeComandas)} accent={C.berry} />
-              <MetCard icon={<TrendingUp size={18} color={C.acai} />} label="Esta semana (7 dias)" value={brl(metrics.weekRevenue)} accent={C.acai} />
+            {/* ── KPIs 4 colunas ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 16, marginBottom: 16 }}
+              className="kpi-grid">
+              <MetCard
+                icon="💰" tint="#E8F4E9" color={C.leaf}
+                label="Receita hoje" value={brl(metrics.todayRevenue)}
+                chip={metrics.todayOrders === 0 ? "aguardando vendas" : `▲ ${metrics.todayOrders} pedido${metrics.todayOrders > 1 ? "s" : ""}`}
+                chipColor={metrics.todayOrders > 0 ? C.leaf : C.muted}
+                chipBg={metrics.todayOrders > 0 ? "#E8F4E9" : "#F1EDF5"}
+              />
+              <MetCard
+                icon="🧾" tint="#FCE8F0" color={C.berry}
+                label="Pedidos hoje" value={String(metrics.todayOrders)}
+                chip="em andamento" chipColor={C.muted} chipBg="#F1EDF5"
+              />
+              <MetCard
+                icon="📈" tint="#FBF0D6" color="#C08A14"
+                label="Ticket médio" value={brl(avgTicket)}
+                chip="▲ média do dia" chipColor="#C08A14" chipBg="#FBF0D6"
+              />
+              <MetCard
+                icon="👥" tint="#EFE7F7" color={C.acai}
+                label="Comandas ativas" value={String(metrics.activeComandas)}
+                chip="ao vivo" chipColor={C.leaf} chipBg="#E8F4E9" live
+              />
             </div>
 
-            {/* Fila em tempo real */}
-            <div style={{ borderRadius: 20, background: "#fff", border: `1px solid ${C.line}`, padding: "16px 20px", marginBottom: 20 }}>
-              <div className="disp" style={{ fontWeight: 800, fontSize: 14, color: C.acaiDeep, marginBottom: 14 }}>Fila em tempo real</div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <QueuePill count={metrics.queueNovos}      label="Novos"      color={C.leaf}    bg="rgba(47,125,58,.1)" pulse />
-                <QueuePill count={metrics.queuePreparando} label="Preparando" color="#C08A18"   bg="rgba(192,138,24,.1)" />
-                <QueuePill count={metrics.queueProntos}    label="Prontos"    color={C.acai}    bg="rgba(91,42,136,.1)" />
-                {metrics.queueNovos + metrics.queuePreparando + metrics.queueProntos === 0 && (
-                  <span style={{ fontSize: 13, color: C.muted, alignSelf: "center" }}>Fila vazia — nenhum pedido aberto</span>
-                )}
-              </div>
+            {/* ── Grade: gráfico + fila ── */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.55fr 1fr", gap: 16, marginBottom: 16 }}
+              className="dash-grid">
+
+              {/* Gráfico de faturamento */}
+              <DashCard>
+                <DashHead
+                  title="Faturamento da semana"
+                  sub="Últimos 7 dias"
+                  pill={"Total " + brl(metrics.weekRevenue)}
+                />
+                <WeekChart series={metrics.weekSeries} />
+              </DashCard>
+
+              {/* Fila em tempo real */}
+              <DashCard>
+                <DashHead title="Fila em tempo real" sub="Cozinha agora" live />
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12 }}>
+                  <QueueRow n={metrics.queueNovos}      label="Novos"      desc="aguardando preparo"
+                    bg="linear-gradient(120deg,#E8F4E9,#fff)" color={C.leaf} />
+                  <QueueRow n={metrics.queuePreparando} label="Preparando" desc="na cozinha agora"
+                    bg="linear-gradient(120deg,#FBF0D6,#fff)" color="#C08A14" />
+                  <QueueRow n={metrics.queueProntos}    label="Prontos"    desc="para entregar"
+                    bg="linear-gradient(120deg,#EFE7F7,#fff)" color={C.acai} />
+                  {metrics.queueNovos + metrics.queuePreparando + metrics.queueProntos === 0 && (
+                    <div style={{ fontSize: 12, color: C.muted, textAlign: "center", paddingTop: 6 }}>
+                      Fila vazia — nenhum pedido em aberto
+                    </div>
+                  )}
+                </div>
+              </DashCard>
             </div>
 
-            {/* Top produtos */}
-            <div style={{ borderRadius: 20, background: "#fff", border: `1px solid ${C.line}`, padding: "16px 20px" }}>
-              <div className="disp" style={{ fontWeight: 800, fontSize: 14, color: C.acaiDeep, marginBottom: 14 }}>Top produtos hoje</div>
-              {metrics.topProducts.length === 0 && (
-                <div style={{ fontSize: 13, color: C.muted, padding: "20px 0", textAlign: "center" }}>Sem vendas registradas hoje ainda.</div>
-              )}
-              {metrics.topProducts.map((p, i) => (
-                <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: C.muted, width: 16, textAlign: "right" }}>{i + 1}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.ink, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "55%" }}>{p.name}</span>
-                      <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-                        <span style={{ fontSize: 12, fontWeight: 700, color: C.muted }}>{p.qty}×</span>
-                        <span className="disp" style={{ fontSize: 12, fontWeight: 800, color: C.acai }}>{brl(p.revenue)}</span>
+            {/* ── Top produtos ── */}
+            <DashCard>
+              <DashHead title="Top produtos hoje" sub="Mais vendidos" />
+              {metrics.topProducts.length === 0 ? (
+                <div style={{ fontSize: 13, color: C.muted, padding: "28px 0", textAlign: "center" }}>
+                  Sem vendas registradas hoje ainda.
+                </div>
+              ) : (
+                <div style={{ marginTop: 10 }}>
+                  {metrics.topProducts.map((p, i) => (
+                    <div key={p.name} style={{
+                      display: "flex", alignItems: "center", gap: 14,
+                      padding: "12px 0",
+                      borderBottom: i < metrics.topProducts.length - 1 ? `1px dashed ${C.line}` : "none",
+                    }}>
+                      <div className="disp" style={{
+                        width: 26, height: 26, borderRadius: 9, flexShrink: 0,
+                        background: i === 0 ? C.acai : i === 1 ? "#8A55C4" : "#B18AD6",
+                        color: "#fff", fontWeight: 800, fontSize: 13,
+                        display: "grid", placeItems: "center",
+                      }}>{i + 1}</div>
+                      <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 700, color: C.ink,
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {p.name}
+                      </div>
+                      <div style={{ width: 160, height: 9, borderRadius: 999, background: "#F1EBF6",
+                        overflow: "hidden", flexShrink: 0 }}>
+                        <div style={{
+                          height: "100%", borderRadius: 999,
+                          width: `${(p.qty / maxQty) * 100}%`,
+                          background: "linear-gradient(90deg,#7B3FB0,#A6D45A)",
+                          transition: "width .6s ease",
+                        }} />
+                      </div>
+                      <div style={{ width: 48, textAlign: "right", fontSize: 12, color: C.muted, flexShrink: 0 }}>
+                        {p.qty} un
+                      </div>
+                      <div className="disp" style={{ width: 82, textAlign: "right",
+                        fontWeight: 800, fontSize: 14, flexShrink: 0 }}>
+                        {brl(p.revenue)}
                       </div>
                     </div>
-                    <div style={{ height: 6, borderRadius: 999, background: C.line, overflow: "hidden" }}>
-                      <div style={{ height: "100%", borderRadius: 999, width: `${(p.qty / maxQty) * 100}%`,
-                        background: i === 0 ? `linear-gradient(90deg,${C.acai},${C.lime})` : `linear-gradient(90deg,${C.acai},${C.grape})`,
-                        transition: "width .6s ease" }} />
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </DashCard>
           </>
         )}
 
@@ -310,34 +379,129 @@ function AdminInner() {
 
 /* ---- sub-componentes do admin ---- */
 
-function MetCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) {
+const cardS: React.CSSProperties = {
+  background: "#fff",
+  border: `1px solid ${C.line}`,
+  borderRadius: 20,
+  padding: 20,
+  boxShadow: "0 18px 40px -30px rgba(42,14,63,.55)",
+};
+
+function DashCard({ children }: { children: React.ReactNode }) {
+  return <div style={cardS}>{children}</div>;
+}
+
+function DashHead({ title, sub, pill, live }: { title: string; sub: string; pill?: string; live?: boolean }) {
   return (
-    <div className="fu cardLift" style={{ borderRadius: 18, padding: "16px 18px", background: "#fff",
-      border: `1px solid ${C.line}`, boxShadow: `0 4px 20px -10px rgba(42,14,63,.12)` }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <div style={{ display: "grid", placeItems: "center", width: 36, height: 36, borderRadius: 11,
-          background: `${accent}15`, border: `1px solid ${accent}25` }}>
-          {icon}
-        </div>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.muted, letterSpacing: ".04em",
-          textTransform: "uppercase" }}>{label}</span>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div>
+        <h3 className="disp" style={{ fontWeight: 800, fontSize: 16, color: C.ink }}>{title}</h3>
+        <div style={{ fontSize: 12, color: C.muted }}>{sub}</div>
       </div>
-      <div className="disp" style={{ fontSize: 22, fontWeight: 800, color: C.acaiDeep, lineHeight: 1 }}>{value}</div>
+      {pill && (
+        <span style={{ fontSize: 11, fontWeight: 700, padding: "5px 11px", borderRadius: 999,
+          background: "#EEF6E1", color: C.leaf }}>{pill}</span>
+      )}
+      {live && (
+        <span className="pulseDot" style={{ width: 8, height: 8, borderRadius: "50%",
+          background: C.leaf, boxShadow: "0 0 0 4px #E8F4E9", display: "inline-block" }} />
+      )}
     </div>
   );
 }
 
-function QueuePill({ count, label, color, bg, pulse }: { count: number; label: string; color: string; bg: string; pulse?: boolean }) {
+function MetCard({ icon, tint, color, label, value, chip, chipColor, chipBg, live }: {
+  icon: string; tint: string; color: string;
+  label: string; value: string;
+  chip?: string; chipColor?: string; chipBg?: string; live?: boolean;
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderRadius: 14,
-      background: bg, border: `1px solid ${color}30`, flex: 1, justifyContent: "center" }}>
-      {pulse && count > 0 && (
-        <span className="pulseDot" style={{ width: 9, height: 9, borderRadius: "50%",
-          background: color, display: "inline-block", flexShrink: 0 }} />
+    <div className="fu cardLift" style={{ ...cardS, padding: "18px 18px 16px" }}>
+      <div style={{ width: 38, height: 38, borderRadius: 12, display: "grid", placeItems: "center",
+        fontSize: 17, marginBottom: 14, background: tint, color }}>{icon}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".05em", textTransform: "uppercase",
+        color: C.muted }}>{label}</div>
+      <div className="disp" style={{ fontWeight: 800, fontSize: 30, lineHeight: 1.05, marginTop: 4,
+        letterSpacing: "-.01em", color: C.ink }}>{value}</div>
+      {chip && (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 700,
+          padding: "3px 9px", borderRadius: 999, marginTop: 9, background: chipBg, color: chipColor }}>
+          {live && <span className="pulseDot" style={{ width: 6, height: 6, borderRadius: "50%",
+            background: chipColor, display: "inline-block" }} />}
+          {chip}
+        </span>
       )}
-      <div style={{ textAlign: "center" }}>
-        <div className="disp" style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>{count}</div>
-        <div style={{ fontSize: 10, fontWeight: 700, color, opacity: .75, marginTop: 3, letterSpacing: ".05em" }}>{label.toUpperCase()}</div>
+    </div>
+  );
+}
+
+function QueueRow({ n, label, desc, bg, color }: {
+  n: number; label: string; desc: string; bg: string; color: string;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: 14,
+      borderRadius: 16, border: `1px solid ${C.line}`, background: bg }}>
+      <div className="disp" style={{ fontWeight: 800, fontSize: 30, lineHeight: 1,
+        width: 44, textAlign: "center", color }}>{n}</div>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{label}</div>
+        <div style={{ fontSize: 11.5, color: C.muted }}>{desc}</div>
+      </div>
+    </div>
+  );
+}
+
+const W = 720, H = 200, PAD = 10;
+
+function WeekChart({ series }: { series: { label: string; value: number }[] }) {
+  if (!series || series.length < 2) return null;
+  const max = Math.max(1, ...series.map((d) => d.value));
+  const pts = series.map((d, i) => {
+    const x = (i / (series.length - 1)) * W;
+    const y = H - PAD - (d.value / max) * (H - PAD * 2);
+    return [x, y] as const;
+  });
+  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x},${y}`).join(" ");
+  const area = `${line} L${W},${H} L0,${H} Z`;
+  const peakIdx = series.reduce((best, d, i) => (d.value > series[best].value ? i : best), 0);
+  const [px, py] = pts[peakIdx];
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="dashFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#8A55C4" stopOpacity=".36"/>
+            <stop offset="1" stopColor="#8A55C4" stopOpacity="0"/>
+          </linearGradient>
+          <linearGradient id="dashStk" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#7B3FB0"/>
+            <stop offset="1" stopColor="#A6D45A"/>
+          </linearGradient>
+        </defs>
+        {/* grid lines */}
+        {[0.25, 0.5, 0.75, 1].map((f) => (
+          <line key={f} x1={0} y1={H - PAD - f * (H - PAD * 2)} x2={W} y2={H - PAD - f * (H - PAD * 2)}
+            stroke="#EFE9F4" strokeWidth={1} />
+        ))}
+        <path d={area} fill="url(#dashFill)" />
+        <path d={line} fill="none" stroke="url(#dashStk)" strokeWidth={3.5}
+          strokeLinejoin="round" strokeLinecap="round" />
+        {series[peakIdx].value > 0 && (
+          <>
+            <circle cx={px} cy={py} r={5} fill="#fff" stroke="#7B3FB0" strokeWidth={3} />
+            <text x={px} y={py - 10} textAnchor="middle"
+              fontFamily="Bricolage Grotesque" fontWeight="800" fontSize="13" fill="#5B2A88">
+              {brl(series[peakIdx].value)}
+            </text>
+          </>
+        )}
+      </svg>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+        {series.map((d) => (
+          <span key={d.label} style={{ flex: 1, textAlign: "center", fontSize: 11,
+            color: C.muted, fontWeight: 600 }}>{d.label}</span>
+        ))}
       </div>
     </div>
   );
