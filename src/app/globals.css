@@ -90,3 +90,47 @@ body  { font-family: var(--font-body,  'DM Sans', system-ui, sans-serif); }
 /* ── linha de status ── */
 @keyframes lineGrow { from{height:0;} to{height:100%;} }
 .lineGrow { animation: lineGrow .5s ease both; }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVIDADE MOBILE
+   ══════════════════════════════════════════════ */
+
+/* Elimina zoom automático em inputs no iOS Safari */
+input, select, textarea { font-size: max(16px, 1em); }
+
+/* Elimina double-tap zoom em botões/links */
+button, a { touch-action: manipulation; }
+
+/* Grids responsivos do admin */
+.g3 { display:grid; gap:12px; margin-bottom:14px; grid-template-columns:repeat(3,1fr); }
+.g2 { display:grid; gap:12px; margin-bottom:20px; grid-template-columns:1fr 1fr; }
+
+@media (max-width:620px) {
+  .g3 { grid-template-columns:repeat(2,1fr); }
+}
+@media (max-width:380px) {
+  .g3, .g2 { grid-template-columns:1fr; }
+}
+
+/* Balcão: esconde relógio e empilha badges em telas pequenas */
+@media (max-width:520px) {
+  .balcao-clock { display:none !important; }
+  .balcao-badges {
+    order:10; width:100%;
+    padding-top:6px;
+    flex-wrap:wrap;
+  }
+}
+
+/* Admin: padding menor em mobile */
+@media (max-width:480px) {
+  .admin-inner { padding:16px 12px 80px !important; }
+}
+
+/* Admin: linha de produto com toggle/botões empilháveis */
+@media (max-width:560px) {
+  .prod-row { flex-wrap:wrap; gap:8px !important; }
+  .prod-row .prod-name { min-width:0; flex:1 1 100%; }
+  .prod-row .prod-price { order:2; }
+  .prod-row .prod-actions { order:3; margin-left:auto; }
+}

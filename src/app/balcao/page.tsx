@@ -123,26 +123,26 @@ function BalcaoInner() {
     <div style={{ minHeight:"100vh", background:"#0D0820", display:"flex", flexDirection:"column" }}>
 
       {/* ── header ── */}
-      <div style={{ display:"flex", alignItems:"center", gap:12, padding:"14px 20px",
+      <div style={{ display:"flex", alignItems:"center", flexWrap:"wrap", gap:10, padding:"12px 16px",
         background:"#080514", borderBottom:"1px solid rgba(255,255,255,.06)" }}>
         <div style={{ display:"grid", placeItems:"center", borderRadius:12, width:36, height:36,
           background:C.lime, flexShrink:0 }}>
           <ScanLine size={18} color={C.acaiDeep} />
         </div>
-        <div style={{ flex:1 }}>
-          <div className="disp" style={{ color:"#fff", fontWeight:800, fontSize:16, letterSpacing:"-.01em" }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div className="disp" style={{ color:"#fff", fontWeight:800, fontSize:16, letterSpacing:"-.01em", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
             Balcão · Açaí da Patrícia
           </div>
           <div style={{ fontSize:11, color:"#8A72A0", marginTop:1 }}>Pedidos em tempo real</div>
         </div>
         {/* relógio */}
-        <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:13, fontWeight:700,
-          color:"#6A5480", marginRight:4 }}>
+        <div className="balcao-clock" style={{ display:"flex", alignItems:"center", gap:5, fontSize:13, fontWeight:700,
+          color:"#6A5480" }}>
           <Clock size={13} color="#6A5480" />
           {clock}
         </div>
         {/* indicadores de fila */}
-        <div style={{ display:"flex", gap:6 }}>
+        <div className="balcao-badges" style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {novos > 0 && (
             <div style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, fontWeight:700,
               padding:"5px 10px", borderRadius:8, background:"rgba(47,185,78,.15)",

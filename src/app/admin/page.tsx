@@ -164,7 +164,7 @@ function AdminInner() {
         />
       </div>
 
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 60px" }}>
+      <div className="admin-inner" style={{ maxWidth: 900, margin: "0 auto", padding: "24px 20px 60px" }}>
 
         {/* ======================== DASHBOARD ======================== */}
         {tab === "dashboard" && (
@@ -172,12 +172,12 @@ function AdminInner() {
             <div style={{ fontSize: 13, fontWeight: 600, color: C.muted, marginBottom: 18, textTransform: "capitalize" }}>{todayDate}</div>
 
             {/* Métricas principais */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 14 }}>
+            <div className="g3">
               <MetCard icon={<Wallet size={18} color={C.lime} />} label="Receita hoje" value={brl(metrics.todayRevenue)} accent={C.lime} />
               <MetCard icon={<ShoppingBag size={18} color="#C09FD8" />} label="Pedidos hoje" value={String(metrics.todayOrders)} accent="#C09FD8" />
               <MetCard icon={<TrendingUp size={18} color="#E8B130" />} label="Ticket médio" value={brl(avgTicket)} accent="#E8B130" />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            <div className="g2">
               <MetCard icon={<Users size={18} color={C.berry} />} label="Comandas ativas agora" value={String(metrics.activeComandas)} accent={C.berry} />
               <MetCard icon={<TrendingUp size={18} color={C.acai} />} label="Esta semana (7 dias)" value={brl(metrics.weekRevenue)} accent={C.acai} />
             </div>
@@ -229,7 +229,7 @@ function AdminInner() {
           <>
             <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
               <input value={newCat} onChange={(e) => setNewCat(e.target.value)} placeholder="Nova categoria (ex: Açaí no copo)"
-                style={{ flex: 1, padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, fontSize: 14, background: "#fff" }} />
+                style={{ flex: 1, padding: "11px 14px", borderRadius: 12, border: `1px solid ${C.line}`, fontSize: 16, background: "#fff" }} />
               <button className="press" onClick={addCategory}
                 style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 16px", borderRadius: 12, border: "none", background: C.acai, color: "#fff", fontWeight: 700, fontSize: 13 }}>
                 <FolderPlus size={16} /> Categoria
@@ -261,7 +261,7 @@ function AdminInner() {
                       <span style={{ fontSize: 12, color: C.muted }}>R$</span>
                       <input type="number" step="0.01" defaultValue={Number(p.price).toFixed(2)}
                         onBlur={(e) => patch(p.id, { price: parseFloat(e.target.value) || 0 })}
-                        style={{ width: 72, padding: "8px 10px", borderRadius: 10, border: `1px solid ${C.line}`, fontSize: 13, fontWeight: 700, color: C.acai }} />
+                        style={{ width: 72, padding: "8px 10px", borderRadius: 10, border: `1px solid ${C.line}`, fontSize: 16, fontWeight: 700, color: C.acai }} />
                     </div>
                     <Toggle label="Ativo"    on={p.active}    onClick={() => patch(p.id, { active: !p.active })} onColor={C.leaf} />
                     <Toggle label="Esgotado" on={p.sold_out}  onClick={() => patch(p.id, { sold_out: !p.sold_out })} onColor={C.berry} />
@@ -373,7 +373,7 @@ function ProductForm({ draft, setDraft, onSave }:
   );
 }
 
-const inp: React.CSSProperties = { width: "100%", padding: "11px 13px", borderRadius: 12, border: `1px solid ${C.line}`, fontSize: 14 };
+const inp: React.CSSProperties = { width: "100%", padding: "11px 13px", borderRadius: 12, border: `1px solid ${C.line}`, fontSize: 16 };
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>

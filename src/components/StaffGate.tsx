@@ -293,7 +293,7 @@ const inp: React.CSSProperties = {
   width:"100%", padding:"13px 16px", borderRadius:13,
   background:"rgba(255,255,255,.055)",
   border:"1px solid rgba(255,255,255,.13)",
-  color:"#fff", fontSize:14, outline:"none",
+  color:"#fff", fontSize:16, outline:"none",
   boxSizing:"border-box", transition:"border-color .15s, box-shadow .15s",
   fontFamily:"inherit",
 };
