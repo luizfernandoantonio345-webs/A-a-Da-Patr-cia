@@ -12,11 +12,11 @@ const BG1 = "#3A1556";
 const BG2 = "#26103A";
 
 export function GlowNav({ tabs, active, onChange }: Props) {
-  const navRef  = useRef<HTMLDivElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
-  const svgRef  = useRef<SVGSVGElement>(null);
+  const navRef     = useRef<HTMLDivElement>(null);
+  const fillRef    = useRef<SVGPathElement>(null);
+  const strokeRef  = useRef<SVGPathElement>(null);
+  const svgRef     = useRef<SVGSVGElement>(null);
 
-  // onChange em ref para não re-disparar o efeito quando o pai re-renderiza
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
@@ -26,8 +26,6 @@ export function GlowNav({ tabs, active, onChange }: Props) {
     navH: 56, active,
     dragging: false,
   });
-
-  // mantém aba alvo sincronizada
   state.current.active = active;
 
   useEffect(() => {
@@ -35,7 +33,6 @@ export function GlowNav({ tabs, active, onChange }: Props) {
     const svg = svgRef.current;
     if (!nav || !svg) return;
 
-    /* ---------- medição ---------- */
     const measure = () => {
       const nr = nav.getBoundingClientRect();
       const rects = Array.from(nav.querySelectorAll<HTMLButtonElement>("[data-tab]")).map((el) => {
@@ -54,32 +51,25 @@ export function GlowNav({ tabs, active, onChange }: Props) {
     measure();
     window.addEventListener("resize", measure);
 
-    /* ---------- utilitário: cor das abas ---------- */
     const paintTabs = (idx: number) => {
       nav.querySelectorAll<HTMLButtonElement>("[data-tab]").forEach((el, i) => {
         el.style.color = i === idx ? "#fff" : INK;
       });
     };
 
-    /* ---------- drag ---------- */
     const dragMove = (e: PointerEvent) => {
       const nr = nav.getBoundingClientRect();
       const x = e.clientX - nr.left;
       const rects = state.current.rects;
-
-      // aba sob o dedo
       let idx = rects.findIndex((t) => x >= t.left && x <= t.right);
       if (idx < 0) {
         const centers = rects.map((t) => (t.left + t.right) / 2);
         idx = x < centers[0] ? 0 : rects.length - 1;
       }
-
       if (idx !== state.current.active) {
         state.current.active = idx;
         paintTabs(idx);
       }
-
-      // puxa o facho para o dedo (efeito elástico)
       if (rects[idx]) {
         const half = (rects[idx].right - rects[idx].left) / 2;
         state.current.Lx = x - half;
@@ -101,12 +91,12 @@ export function GlowNav({ tabs, active, onChange }: Props) {
       onChangeRef.current(state.current.active);
     };
 
-    nav.addEventListener("pointerdown", onDown);
-    nav.addEventListener("pointermove", onMove);
-    nav.addEventListener("pointerup",   onUp);
+    nav.addEventListener("pointerdown",   onDown);
+    nav.addEventListener("pointermove",   onMove);
+    nav.addEventListener("pointerup",     onUp);
     nav.addEventListener("pointercancel", onUp);
 
-    /* ---------- loop de física (mola) ---------- */
+    /* ── loop de física (mola) ── */
     let raf = 0, last = performance.now();
     const loop = (now: number) => {
       const dt = Math.min(0.032, (now - last) / 1000); last = now;
@@ -123,16 +113,26 @@ export function GlowNav({ tabs, active, onChange }: Props) {
         s.vR += (-kR * (s.Rx - t.right) - dR * s.vR) * dt; s.Rx += s.vR * dt;
       }
 
-      const path = pathRef.current;
+      const fill   = fillRef.current;
+      const stroke = strokeRef.current;
       const t = s.rects[s.active];
-      if (path && t) {
-        const rad = t.height / 2 + 2, cy = t.top + t.height / 2;
-        const left = Math.min(s.Lx, s.Rx), rightX = Math.max(s.Lx, s.Rx);
-        const x = left, w = Math.max(rad * 2, rightX - left), span = rightX - left;
-        const y = cy - rad, r = rad, x2 = x + w;
-        path.setAttribute("d", `M ${x+r} ${y} L ${x2-r} ${y} A ${r} ${r} 0 0 1 ${x2-r} ${y+2*r} L ${x+r} ${y+2*r} A ${r} ${r} 0 0 1 ${x+r} ${y} Z`);
-        path.setAttribute("stroke-width", (2.2 + Math.min(span / 120, 1) * 1.5).toFixed(2));
+
+      if (t) {
+        const rad = t.height / 2 + 2;
+        const cy = t.top + t.height / 2;
+        const left  = Math.min(s.Lx, s.Rx);
+        const right = Math.max(s.Lx, s.Rx);
+        const w     = Math.max(rad * 2, right - left);
+        const x = left, x2 = x + w;
+        const y = cy - rad, r = rad;
+        const d = `M ${x+r} ${y} L ${x2-r} ${y} A ${r} ${r} 0 0 1 ${x2-r} ${y+2*r} L ${x+r} ${y+2*r} A ${r} ${r} 0 0 1 ${x+r} ${y} Z`;
+        const span = right - left;
+        const sw = (2.0 + Math.min(span / 120, 1) * 1.2).toFixed(2);
+
+        if (fill)   { fill.setAttribute("d", d); }
+        if (stroke) { stroke.setAttribute("d", d); stroke.setAttribute("stroke-width", sw); }
       }
+
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -152,27 +152,55 @@ export function GlowNav({ tabs, active, onChange }: Props) {
     <div
       ref={navRef}
       style={{
-        position: "relative", display: "flex", gap: 4, padding: 6, borderRadius: 999,
-        background: `linear-gradient(160deg,${BG1},${BG2})`,
-        border: "1px solid rgba(166,212,90,.14)",
-        boxShadow: "inset 0 1px 0 rgba(255,255,255,.06),0 12px 30px -16px rgba(42,14,63,.8)",
+        position: "relative", display: "flex", gap: 4, padding: 5, borderRadius: 16,
+        background: "rgba(0,0,0,.22)",
+        border: "1px solid rgba(255,255,255,.08)",
         touchAction: "none",
       }}
     >
-      <svg ref={svgRef} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", overflow: "visible", zIndex: 1 }}>
+      <svg
+        ref={svgRef}
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%",
+          pointerEvents: "none", overflow: "visible", zIndex: 1,
+        }}
+      >
         <defs>
-          <linearGradient id="glowlit" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0"  stopColor="#7B3FB0" />
-            <stop offset=".5" stopColor="#A6D45A" />
-            <stop offset="1"  stopColor="#7B3FB0" />
+          {/* fill cristalino — roxo semi-transparente */}
+          <linearGradient id="pillFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stopColor="#8A45C0" stopOpacity=".58"/>
+            <stop offset="1"   stopColor="#3A1260" stopOpacity=".38"/>
+          </linearGradient>
+          {/* borda gradiente roxa → lime */}
+          <linearGradient id="pillStroke" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0"   stopColor="#8A55C4"/>
+            <stop offset=".5"  stopColor="#A6D45A"/>
+            <stop offset="1"   stopColor="#8A55C4"/>
+          </linearGradient>
+          {/* highlight inset no topo */}
+          <linearGradient id="pillShine" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stopColor="rgba(255,255,255,.22)"/>
+            <stop offset="1"   stopColor="rgba(255,255,255,0)"/>
           </linearGradient>
         </defs>
+
+        {/* 1 — fill cristalino */}
         <path
-          ref={pathRef}
+          ref={fillRef}
+          fill="url(#pillFill)"
+          stroke="none"
+        />
+        {/* 2 — borda gradiente roxa→lime com glow suave */}
+        <path
+          ref={strokeRef}
           fill="none"
-          stroke="url(#glowlit)"
+          stroke="url(#pillStroke)"
           strokeLinejoin="round"
-          style={{ filter: "drop-shadow(0 0 3px rgba(166,212,90,.9)) drop-shadow(0 0 9px rgba(123,63,176,.85))" }}
+          style={{
+            filter:
+              "drop-shadow(0 0 4px rgba(166,212,90,.55)) drop-shadow(0 3px 12px rgba(123,63,176,.55))",
+          }}
         />
       </svg>
 
@@ -183,10 +211,14 @@ export function GlowNav({ tabs, active, onChange }: Props) {
           aria-selected={i === active}
           onClick={() => onChangeRef.current(i)}
           style={{
-            position: "relative", zIndex: 2, flex: 1, border: "none", background: "transparent",
-            color: i === active ? "#fff" : INK, fontSize: 12.5, fontWeight: 700,
-            padding: "11px 6px", borderRadius: 999, cursor: "pointer",
-            transition: "color .3s", whiteSpace: "nowrap", userSelect: "none",
+            position: "relative", zIndex: 2,
+            flex: 1, border: "none", background: "transparent",
+            color: i === active ? "#fff" : INK,
+            fontSize: 13.5, fontWeight: 700,
+            padding: "12px 6px", borderRadius: 12,
+            cursor: "pointer", transition: "color .28s",
+            whiteSpace: "nowrap", userSelect: "none",
+            letterSpacing: "-.01em",
           }}
         >
           {label}
